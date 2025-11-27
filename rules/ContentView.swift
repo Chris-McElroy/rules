@@ -9,6 +9,7 @@ import SwiftUI
 import UserNotifications
 
 struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @ObservedObject var times = Times.main
     
     var body: some View {
@@ -65,5 +66,10 @@ struct ContentView: View {
             .padding(.bottom, 40)
         }
         .font(Font.custom("Baskerville", size: 18.0))
+        .onChange(of: scenePhase) {
+            if scenePhase == .background {
+                times.scheduleNextCheckin()
+            }
+        }
     }
 }

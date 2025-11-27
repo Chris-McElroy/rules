@@ -115,7 +115,7 @@ class Times: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
         }
         
         let timeSinceLastCheckin = Date.timeIntervalSinceReferenceDate - abs(savedTimes.first ?? 0)
-        let timeUntilReminder = max(900, reminderInterval - timeSinceLastCheckin)
+        let timeUntilReminder = max(60, reminderInterval - timeSinceLastCheckin)
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeUntilReminder, repeats: false)
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: notificationContent, trigger: trigger)
