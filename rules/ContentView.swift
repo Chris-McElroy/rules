@@ -11,12 +11,6 @@ import UserNotifications
 struct ContentView: View {
     @ObservedObject var times = Times.main
     
-    let formatter = DateFormatter()
-    
-    init() {
-        formatter.dateFormat = ".M.d.H.m"
-    }
-    
     var body: some View {
         VStack(spacing: 30) {
             List() {
@@ -25,7 +19,7 @@ struct ContentView: View {
                         Spacer()
                         if time.wrappedValue != 0 {
                             Image(systemName: time.wrappedValue > 0 ? "checkmark.seal.fill" : "xmark.seal")
-                            Text(formatter.string(from: Date(timeIntervalSinceReferenceDate: abs(time.wrappedValue))))
+                            Text(times.format(time: time.wrappedValue))
                         } else if !times.oldTimes.isEmpty {
                             Text("undo")
                                 .onTapGesture {
@@ -52,7 +46,8 @@ struct ContentView: View {
                 }
                 .listRowSeparator(.hidden)
             }
-            Text("following since " + formatter.string(from: Date.init(timeIntervalSinceReferenceDate: abs(times.savedTimes.first ?? 0))) + "?")
+            Text("following since " + times.format(time: times.savedTimes.first ?? 0) + "?")
+                .font(Font.custom("Baskerville", size: 20.0))
             HStack(spacing: 75) {
                 Image(systemName: "xmark.seal")
                     .resizable()
@@ -65,10 +60,10 @@ struct ContentView: View {
                     .frame(width: 50, height: 50)
                     .onTapGesture {
                         times.recordTime(true)
-                        
                     }
             }
             .padding(.bottom, 40)
         }
+        .font(Font.custom("Baskerville", size: 18.0))
     }
 }
