@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 @main
 struct rulesApp: App {
+    private var times = Times.main
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
