@@ -68,7 +68,7 @@ struct ContentView: View {
         .font(Font.custom("Baskerville", size: 18.0))
         .onChange(of: scenePhase) {
             if scenePhase == .background {
-                times.scheduleNextCheckin()
+                times.scheduleCheckins()
             }
         }
     }

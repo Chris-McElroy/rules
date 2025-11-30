@@ -28,21 +28,6 @@ class Times: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
         }
     }
     
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        switch response.actionIdentifier {
-        case "yes":
-            savedTimes.insert(Date.timeIntervalSinceReferenceDate, at: 0)
-            Storage.set(savedTimes, for: .times)
-        case "no":
-            savedTimes.insert(-Date.timeIntervalSinceReferenceDate, at: 0)
-            Storage.set(savedTimes, for: .times)
-        default:
-            break
-        }
-        scheduleNextCheckin()
-        completionHandler()
-    }
-    
     func format(time: TimeInterval) -> String {
         let current = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: Date.now)
         let given = Calendar.current.dateComponents([.weekday, .year, .month, .day, .hour, .minute],
@@ -100,10 +85,10 @@ class Times: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
     func recordTime(_ success: Bool) {
         savedTimes.insert(success ? Date.timeIntervalSinceReferenceDate : -Date.timeIntervalSinceReferenceDate, at: 0)
         Storage.set(savedTimes, for: .times)
-        scheduleNextCheckin()
+        scheduleCheckins()
     }
     
-    func scheduleNextCheckin() {
+    func scheduleCheckins() {
         let timeSincelastFail: TimeInterval = Date.timeIntervalSinceReferenceDate + (savedTimes.first(where: { $0 < 0 }) ?? 0)
         let reminderInterval: TimeInterval
         
@@ -115,14 +100,31 @@ class Times: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
         }
         
         let timeSinceLastCheckin = Date.timeIntervalSinceReferenceDate - abs(savedTimes.first ?? 0)
-        let timeUntilReminder = max(60, reminderInterval - timeSinceLastCheckin)
+        let timesUntilCheckins = stride(from: 0, to: 12, by: 1).map { max(60, reminderInterval - timeSinceLastCheckin) + reminderInterval*$0 }
         
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeUntilReminder, repeats: false)
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: notificationContent, trigger: trigger)
-
         notificationCenter.removeAllDeliveredNotifications()
         notificationCenter.removeAllPendingNotificationRequests()
-        notificationCenter.add(request)
+        
+        for time in timesUntilCheckins {
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: time, repeats: false)
+            let request = UNNotificationRequest(identifier: UUID().uuidString, content: notificationContent, trigger: trigger)
+            notificationCenter.add(request)
+        }
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        switch response.actionIdentifier {
+        case "yes":
+            savedTimes.insert(Date.timeIntervalSinceReferenceDate, at: 0)
+            Storage.set(savedTimes, for: .times)
+        case "no":
+            savedTimes.insert(-Date.timeIntervalSinceReferenceDate, at: 0)
+            Storage.set(savedTimes, for: .times)
+        default:
+            break
+        }
+        scheduleCheckins()
+        completionHandler()
     }
     
     func setUpNotifications() {
@@ -131,13 +133,13 @@ class Times: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
                 self.notificationCenter.requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
                     if success {
                         print("success!")
-                        self.scheduleNextCheckin()
+                        self.scheduleCheckins()
                     } else if let error {
                         print(error.localizedDescription)
                     }
                 }
             } else if settings.authorizationStatus == .authorized {
-                self.scheduleNextCheckin()
+                self.scheduleCheckins()
             }
         }
     }
