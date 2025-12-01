@@ -100,7 +100,7 @@ class Times: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
         }
         
         let timeSinceLastCheckin = Date.timeIntervalSinceReferenceDate - abs(savedTimes.first ?? 0)
-        let timesUntilCheckins = stride(from: 0, to: 12, by: 1).map { max(60, reminderInterval - timeSinceLastCheckin) + reminderInterval*$0 }
+        let timesUntilCheckins = stride(from: 0, to: 12, by: 1).map { max(60, reminderInterval - timeSinceLastCheckin) + 3600*$0 }
         
         notificationCenter.removeAllDeliveredNotifications()
         notificationCenter.removeAllPendingNotificationRequests()
